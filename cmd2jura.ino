@@ -32,13 +32,16 @@
 #include <WiFiManager.h>
 #include <SoftwareSerial.h>
 
+const char* www_username = "USER";
+const char* www_password = "PASSWORD";
+
 #define WIFINAME  "JURA"
 
 #define GPIORX    12
 #define GPIOTX    13
 
 #define GPIOLEDIO     4
-#define GPIOLEDPULSE  0
+#define GPIOLEDPULSE  BUILTIN_LED
 
 SoftwareSerial softserial(GPIORX, GPIOTX);
 ESP8266WebServer webserver(80);
@@ -85,6 +88,10 @@ String cmd2jura(String outbytes) {
 }
 
 void handle_api() {
+  if (!webserver.authenticate(www_username, www_password)) {
+    return webserver.requestAuthentication();
+  }
+  
   String cmd;
   String result;
 
@@ -94,6 +101,7 @@ void handle_api() {
   }
 
   cmd = webserver.arg("plain");
+
   if (cmd.length() < 3) {
     webserver.send(400, "text/plain", "Bad Request");
     return;
@@ -112,6 +120,9 @@ void handle_api() {
 }
 
 void handle_web() {
+  if (!webserver.authenticate(www_username, www_password)) {
+    return webserver.requestAuthentication();
+  }
   String html;
 
   html  = "<!DOCTYPE html><html><body><h1>&#9749; Jura Coffee Machine Gateway</h1>";
